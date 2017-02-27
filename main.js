@@ -2,21 +2,63 @@ const electron = require('electron')
 // Module to control application life.
 const app = electron.app
 const protocol = electron.protocol
+const path = require('path')
+const url = require('url')
 
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let mainWindow;
+
+const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
+  // Someone tried to run a second instance, we should focus our window.
+  devToolsLog(commandLine);
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
+  }
+
+  devToolsLog('process args ' + commandLine.join(','))
+  devToolsLog('initial url? ' + initialUrl)
+  // on Windows, new app is created every time someone tries to open
+  // custom protocol link. On Mac OS X, we have single application instance
+  // and the custom protocol link is passed via "open-url" event (see below)
+  const openUrl = initialUrl || commandLine[1]
+  const firstUrl = openUrl ? openUrl : base
+  devToolsLog('opening ' + firstUrl)
+
+  let params = {
+    video: firstUrl
+  };
+
+  let paramString = "";
+  for(let i=0; i<Object.keys(params).length; i++) {
+    paramString = paramString + (Object.keys(params)[i] + "=" + encodeURIComponent(params[Object.keys(params)[i]]));
+  }
+
+  mainWindow.loadURL(url.format({
+    pathname: path.join(__dirname, '/player/index.html'),
+    protocol: 'file:',
+    slashes: true,
+    search: paramString
+  }))
+
+})
+
+if(shouldQuit) {
+  app.quit();
+}
+
 
 console.log('process args', process.argv)
 
 // TODO pass the base url in the environment variable during setup?
-const base = 'https://todomvc-express.bahmutov.com/'
-let initialUrl = ''
+const base = 'http://mn-l.mncdn.com/kanal24/smil:kanal24.smil/playlist.m3u8'
+let initialUrl = 'http://mn-l.mncdn.com/kanal24/smil:kanal24.smil/playlist.m3u8'
 // This application opens links that start with this protocol
-const PROTOCOL = 'todo2://'
+const PROTOCOL = 'playerJs://'
 const PROTOCOL_PREFIX = PROTOCOL.split(':')[0]
 
 // prints given message both in the terminal console and in the DevTools
@@ -25,6 +67,7 @@ function devToolsLog(s) {
   if (mainWindow && mainWindow.webContents) {
     mainWindow.webContents.executeJavaScript(`console.log("${s}")`)
   }
+
 }
 
 function stripCustomProtocol(url) {
@@ -34,12 +77,8 @@ function stripCustomProtocol(url) {
   if (!url.startsWith(PROTOCOL)) {
     return url
   }
-  const todoPath = url.substr(8)
-  return todoPath
-}
-
-function formFullTodoUrl(todoPath) {
-  return `${base}${todoPath}`
+  const videoPath = url.substr(11)
+  return videoPath
 }
 
 function createWindow () {
@@ -53,10 +92,24 @@ function createWindow () {
   // custom protocol link. On Mac OS X, we have single application instance
   // and the custom protocol link is passed via "open-url" event (see below)
   const openUrl = initialUrl || process.argv[1]
-  const firstUrl = openUrl ? formFullTodoUrl(openUrl) : base
+  const firstUrl = openUrl ? openUrl : base
   devToolsLog('opening ' + firstUrl)
 
-  mainWindow.loadURL(firstUrl)
+  let params = {
+    video: firstUrl
+  };
+
+  let paramString = "";
+  for(let i=0; i<Object.keys(params).length; i++) {
+    paramString = paramString + (Object.keys(params)[i] + "=" + encodeURIComponent(params[Object.keys(params)[i]]));
+  }
+
+  mainWindow.loadURL(url.format({
+    pathname: path.join(__dirname, '/player/index.html'),
+    protocol: 'file:',
+    slashes: true,
+    search: paramString
+  }))
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -67,18 +120,27 @@ function createWindow () {
   })
 
   protocol.registerHttpProtocol(PROTOCOL_PREFIX, (req, cb) => {
-    const url = req.url
-    const todoPath = stripCustomProtocol(url)
-    const msg = `todo url ${url} path ${todoPath}`
+    devToolsLog(req);
+    const paramUrl = req.url ? req.url : base;
+    const videoUrl = stripCustomProtocol(paramUrl)
+    const msg = `playing video ${paramUrl}`
     devToolsLog(msg)
 
-    // instead of returning something to load, just load
-    // the full url ourselves
-    // if we return HTTP url instead, the browser will not know how
-    // to resolve relative links, since it will still be using PROTOCOL://link
-    const fullUrl = formFullTodoUrl(todoPath)
-    devToolsLog('full url to open ' + fullUrl)
-    mainWindow.loadURL(fullUrl)
+    let params = {
+      video: videoUrl
+    };
+
+    let paramString = "";
+    for(let i=0; i<Object.keys(params).length; i++) {
+      paramString = paramString + (Object.keys(params)[i] + "=" + encodeURIComponent(params[Object.keys(params)[i]]));
+    }
+
+    mainWindow.loadURL(url.format({
+      pathname: path.join(__dirname, '/player/index.html'),
+      protocol: 'file:',
+      slashes: true,
+      search: paramString
+    }))
   }, (err) => {
     if (!err) {
       console.log('registered todo protocol')
@@ -87,6 +149,22 @@ function createWindow () {
       console.error(err)
     }
   })
+
+  protocol.interceptHttpProtocol(
+    "http",
+    (request,callback) => {
+      console.log("request intercepted");
+      callback(request);
+    },
+    (err) => {
+      if (!err) {
+        console.log('registered todo protocol')
+      } else {
+        console.error('could not register todo protocol')
+        console.error(err)
+      }
+    }
+  );
 }
 
 // This method will be called when Electron has finished
@@ -115,10 +193,21 @@ app.on('open-url', function (e, url) {
   devToolsLog('setting initial url to ' + initialUrl)
 
   if (mainWindow) {
-    // we are already running!
-    const fullUrl = formFullTodoUrl(initialUrl)
-    devToolsLog('full url to open ' + fullUrl)
-    mainWindow.loadURL(fullUrl)
+
+    let params = {
+      video: paramUrl
+    };
+
+    let paramString = "";
+    for(let i=0; i<Object.keys(params).length; i++) {
+      paramString = paramString + (Object.keys(params)[i] + "=" + encodeURIComponent(params[Object.keys(params)[i]]));
+    }
+    mainWindow.loadURL(url.format({
+      pathname: path.join(__dirname, '/player/index.html?video=' + initialUrl),
+      protocol: 'file:',
+      slashes: true,
+      search: paramString
+    }))
   }
 })
 
