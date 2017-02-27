@@ -149,22 +149,6 @@ function createWindow () {
       console.error(err)
     }
   })
-
-  protocol.interceptHttpProtocol(
-    "http",
-    (request,callback) => {
-      console.log("request intercepted");
-      callback(request);
-    },
-    (err) => {
-      if (!err) {
-        console.log('registered todo protocol')
-      } else {
-        console.error('could not register todo protocol')
-        console.error(err)
-      }
-    }
-  );
 }
 
 // This method will be called when Electron has finished
