@@ -28,23 +28,12 @@ if(window.location.search.length) {
   }
 }
 
-document.querySelector("#video-run").addEventListener("click", function(event) {
-  var inputValue = document.querySelector("input#video-input").value;
-  if(inputValue) {
-   
-    player.src({
-      src: inputValue,
-      type: 'application/x-mpegURL',
-      withCredentials: true
-    });
-
-    player.play();
-  }
-  
-  
+document.querySelector(".close-window").addEventListener("click", function() {
+  require('electron').remote.getCurrentWindow().close();
 });
 
-var player = videojs('example-video');
+
+var player = videojs('video-container');
 
     player.src({
       src: defaultVideo,

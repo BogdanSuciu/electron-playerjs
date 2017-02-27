@@ -50,4 +50,4 @@ Temporary Items
 # ignore webstorm folder
 .idea
 dist
-node-modules
+node_modules
