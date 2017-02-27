@@ -10,6 +10,24 @@
 
 var defaultVideo = "http://mn-l.mncdn.com/kanal24/smil:kanal24.smil/playlist.m3u8";
 
+if(window.location.search.length) {
+  var parsedParams = window.location.search.substr(1);
+  var params = {};
+  parsedParams = parsedParams.split("&");
+  for(var i=0; i<parsedParams.length; i++) {
+    var paramItem = parsedParams[i];
+    if(paramItem.split("=")[1]) {
+      var key = paramItem.split("=")[0];
+      var value = paramItem.split("=")[1];
+      params[key] = value;
+    }
+  }
+
+  if(params.video) {
+    defaultVideo = decodeURIComponent(params.video);
+  }
+}
+
 document.querySelector("#video-run").addEventListener("click", function(event) {
   var inputValue = document.querySelector("input#video-input").value;
   if(inputValue) {
