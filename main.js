@@ -82,7 +82,8 @@ function stripCustomProtocol(url) {
 }
 
 function createWindow () {
-  mainWindow = new BrowserWindow({width: 1000, height: 800})
+  //mainWindow = new BrowserWindow({width: 1200, height: 600, frame: false});
+  mainWindow = new BrowserWindow({width: 1000, height: 800});
   // just for demo purposes
   mainWindow.webContents.openDevTools()
 
