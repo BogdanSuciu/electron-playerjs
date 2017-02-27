@@ -1,7 +1,7 @@
 {
-  "name": "todo",
-  "version": "1.0.2",
-  "description": "TodoMVC Electron application",
+  "name": "electronPlayerJs",
+  "version": "0.0.1",
+  "description": "PlayerJs Electron application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -9,16 +9,8 @@
     "dist": "build",
     "win": "build --win"
   },
-  "repository": "https://github.com/electron/electron-quick-start",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
-  ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
+  "author": "bogdan suciu",
+  "license": "UNLICENCED",
   "devDependencies": {
     "electron": "^1.4.1",
     "electron-builder": "7.14.2"
@@ -29,9 +21,9 @@
       "category": ""
     },
     "protocols": [{
-      "name": "todo2",
+      "name": "playerJs",
       "role": "Viewer",
-      "schemes": ["todo2", "todos2"]
+      "schemes": ["playerJs"]
     }],
     "win": {
       "target": "nsis"
